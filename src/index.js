@@ -40,7 +40,9 @@ import {
   computed,
   autorun,
   when,
-  reaction
+  reaction,
+  action,
+  runInAction
 } from "mobx";
 
 class Store {
@@ -62,6 +64,13 @@ class Store {
   @computed
   get mixed() {
     return `${store.string}/${store.number}`;
+  }
+
+  // 通过action进行可观察数据的修改可以避免通过store直接赋值修改可观察数据造成的多次autorun或者reaction的多次渲染
+  @action //@action.bound就是绑定了上下文store.bar
+  bar() {
+    this.string = "vvv";
+    this.number = 98;
   }
 }
 
@@ -91,3 +100,10 @@ store.bool = true;
 reaction(() => [store.string, store.number], arr => console.log(arr.join("/")));
 // store.string = "换行符";
 store.number = 332;
+
+// store.bar();
+// runInAction等同于action的调用，可以接受一个字符串参数
+runInAction(() => {
+  store.string = "vvv";
+  store.number = 98;
+});
