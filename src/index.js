@@ -1,54 +1,54 @@
-/**
- * decorator修饰器语法
- * 修饰类的时候只有一个参数表示这个被修饰的类
- * 修饰类的属性方法的时候有三个参数，分别是类的实例、修饰的属性方法的名称、该成员的描述符
- */
-function log(target) {
-  const desc = Object.getOwnPropertyDescriptors(target.prototype);
-  for (const key of Object.keys(desc)) {
-    if (key === "constructor") {
-      continue;
-    }
-    const func = desc[key].value;
-    if ("function" === typeof func) {
-      Object.defineProperty(target.prototype, key, {
-        value(...args) {
-          console.log("before " + key);
-          const ret = func.apply(this, args);
-          console.log("after " + key);
-          return ret;
-        }
-      });
-    }
-  }
-}
+// import { observable, isArrayLike, extendObservable } from "mobx";
 
-function readonly(target, key, descriptor) {
-  descriptor.writable = false;
-}
+// // array object map
+// const arr = observable(["a", "b", "c"]);
+// console.log(
+//   arr,
+//   Array.isArray(arr),
+//   isArrayLike(arr),
+//   arr[0],
+//   arr[2],
+//   arr.push("d"),
+//   arr
+// );
 
-function validate(target, key, descriptor) {
-  const func = descriptor.value;
-  descriptor.value = function(...args) {
-    for (let num of args) {
-      if ("number" !== typeof num) {
-        throw new Error(`${num} is not a number`);
-      }
-    }
-    return func.apply(this, args);
-  };
-}
+// const obj = observable({ a: 1, b: 2 });
+// console.log(obj.a, obj.b);
+// // mobx对于对象中新添加属性需要extendObservable
+// extendObservable(obj, {
+//   c: 123
+// });
+// console.log(obj.c);
 
-@log
-class Numberic {
-  @readonly
-  PI = 3.1415926;
-  @validate
-  add(...nums) {
-    return nums.reduce((p, n) => p + n, 0);
-  }
-}
+// const map = observable(new Map());
+// map.set("a", 1);
+// console.log(map.has("a"));
+// map.delete("a");
+// console.log(map.has("a"));
 
-console.log(new Numberic().add(1, 2, 3));
-// new Numberic().PI = 100;
-// new Numberic().add(1, "x");
+// // 对于原始类型string,boolean,number,symbol需要使用observable.box包装成可被观察的对象
+// let num = observable.box(20);
+// let str = observable.box("hello");
+// let bool = observable.box(true);
+// console.log(num, str, bool);
+// bool.set(false);
+// console.log(num.get(), str.get(), bool.get());
+
+import { observable, isArrayLike } from "mobx";
+
+class Store {
+  // 使用@observable修饰可以进行观察对象，mobx对observable进行了操作可以自动观察是原始类型还是引用类型，不需要调用observable.box
+  @observable
+  array = [];
+  @observable
+  obj = {};
+  @observable
+  map = new Map();
+
+  @observable
+  string = "hello";
+  @observable
+  number = 20;
+  @observable
+  bool = false;
+}
