@@ -108,7 +108,46 @@ class TodoItem extends Component {
 }
 
 @observer
-class TodoList extends Component {
+class TodoFooter extends Component {
+  static propTypes = {
+    store: PropTypes.shape({
+      createToDo: PropTypes.func,
+      todos: ObservablePropTypes.observableArrayOf(
+        ObservablePropTypes.observableObject
+      ).isRequired
+    }).isRequired
+  };
+  render() {
+    trace();
+    const store = this.props.store;
+    return <footer>{store.left} item(s) unfinished</footer>;
+  }
+}
+
+@observer
+class TodoView extends Component {
+  static propTypes = {
+    todos: ObservablePropTypes.observableArrayOf(
+      ObservablePropTypes.observableObject
+    ).isRequired
+  };
+  render() {
+    const todos = this.props.todos;
+    return todos.map(todo => {
+      return (
+        <li key={todo.id} className="todo-item">
+          <TodoItem todo={todo} />
+          <span className="delete" onClick={e => store.removeTodo(todo)}>
+            X
+          </span>
+        </li>
+      );
+    });
+  }
+}
+
+@observer
+class TodoHeader extends Component {
   static propTypes = {
     store: PropTypes.shape({
       createToDo: PropTypes.func,
@@ -141,6 +180,33 @@ class TodoList extends Component {
       inputValue
     });
   };
+  render() {
+    return (
+      <header>
+        <form onSubmit={this.handleSubmit}>
+          <input
+            type="text"
+            onChange={this.handleChange}
+            value={this.state.inputValue}
+            className="input"
+            placeholder="What needs to be finished?"
+          />
+        </form>
+      </header>
+    );
+  }
+}
+
+@observer
+class TodoList extends Component {
+  static propTypes = {
+    store: PropTypes.shape({
+      createToDo: PropTypes.func,
+      todos: ObservablePropTypes.observableArrayOf(
+        ObservablePropTypes.observableObject
+      ).isRequired
+    }).isRequired
+  };
 
   render() {
     trace();
@@ -148,30 +214,11 @@ class TodoList extends Component {
     const todos = store.todos;
     return (
       <div className="todo-list">
-        <header>
-          <form onSubmit={this.handleSubmit}>
-            <input
-              type="text"
-              onChange={this.handleChange}
-              value={this.state.inputValue}
-              className="input"
-              placeholder="What needs to be finished?"
-            />
-          </form>
-        </header>
+        <TodoHeader store={store} />
         <ul>
-          {todos.map(todo => {
-            return (
-              <li key={todo.id} className="todo-item">
-                <TodoItem todo={todo} />
-                <span className="delete" onClick={e => store.removeTodo(todo)}>
-                  X
-                </span>
-              </li>
-            );
-          })}
+          <TodoView todos={todos} />
         </ul>
-        <footer>{store.left} item(s) unfinished</footer>
+        <TodoFooter store={store} />
       </div>
     );
   }
