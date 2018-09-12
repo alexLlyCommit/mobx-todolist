@@ -34,7 +34,14 @@
 // bool.set(false);
 // console.log(num.get(), str.get(), bool.get());
 
-import { observable, isArrayLike } from "mobx";
+import {
+  observable,
+  isArrayLike,
+  computed,
+  autorun,
+  when,
+  reaction
+} from "mobx";
 
 class Store {
   // 使用@observable修饰可以进行观察对象，mobx对observable进行了操作可以自动观察是原始类型还是引用类型，不需要调用observable.box
@@ -51,4 +58,36 @@ class Store {
   number = 20;
   @observable
   bool = false;
+
+  @computed
+  get mixed() {
+    return `${store.string}/${store.number}`;
+  }
 }
+
+// computed将可观察数据进行重新组合成一个可观察数据
+const store = new Store();
+const foo = computed(function() {
+  return `${store.string}/${store.number}`;
+});
+// 为了监听到foo计算值的变化
+foo.observe(function(change) {
+  console.log(change);
+});
+console.log(foo.get());
+store.string = "world";
+store.number = 30;
+
+// autorun自动运行---修改任意可观察的对象类型都会触发自动运行
+autorun(() => {
+  console.log(`${store.string}/${store.number}`);
+});
+
+// when接收两个参数，第一个函数参数必须根据可观察对象返回布尔值，当布尔值为true的时候执行第二个函数参数
+when(() => store.bool, () => console.log("it's true"));
+store.bool = true;
+
+// reaction用于对引用的可观察数据改变的时候执行副作用,在数据进行初始化之后在只要其中一个可观察对象进行数据更改触发副作用
+reaction(() => [store.string, store.number], arr => console.log(arr.join("/")));
+// store.string = "换行符";
+store.number = 332;
